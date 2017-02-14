@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<body ng-app="myApp">
+<div class="w3-container" ng-model='showingpage'>
+<div ng-controller="userCtrl">
+<h3>Users</h3>
+<h4>Search</h4> 
+<input type="text" ng-model="searchByName" /> 
+<table class="w3-table w3-bordered w3-striped" id="userTable" >
+  <tr>
+    <th >Edit</th>
+    <th><a href="#" ng-click="orderByField='id'; reverseSort = !reverseSort">
+          id <span ng-show="orderByField == 'id'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a></th>
+    <th><a href="#" ng-click="orderByField='fName'; reverseSort = !reverseSort">
+          First Name <span ng-show="orderByField == 'fName'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a></th>
+    <th><a href="#" ng-click="orderByField='lName'; reverseSort = !reverseSort">
+          Last Name <span ng-show="orderByField == 'lName'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a> </th>
+    <th><a href="#" ng-click="orderByField='title'; reverseSort = !reverseSort">
+          Title <span ng-show="orderByField == 'title'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a></th>
+    <th><a href="#" ng-click="orderByField='age'; reverseSort = !reverseSort">
+          Age <span ng-show="orderByField == 'age'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a></th>
+    <th><a href="#" ng-click="orderByField='sex'; reverseSort = !reverseSort">
+          Sex <span ng-show="orderByField == 'sex'"><span ng-show="!reverseSort"></span><span ng-show="reverseSort"></span></span>
+          </a></th>
+  </tr>
+  <tr ng-repeat="user in users | orderBy:orderByField:reverseSort | filter:searchByName" ng-if="$index >= startIndex && $index < endIndex">
+    <td>
+      <button class="w3-btn w3-ripple" ng-click="editUser(user._id)">&#9998; Edit</button>
+    </td>
+    <td>{{ user._id }}</td>
+    <td>{{ user.FirstName }}</td>
+    <td>{{ user.LastName }}</td>
+    <td>{{ user.Title }}</td>
+    <td>{{ user.age }}</td>
+    <td>{{ user.sex }}</td>
+    <td>
+      <button class="w3-btn w3-ripple" ng-click="deleteUser(user._id)">&#9998; Delete </button>
+    </td>
+  </tr>
+</table>
+<br>
+<h3>pagination</h3>
+
+<button class="w3-btn w3-blue w3-ripple" ng-click="updatePage(0)"> First Page </button>
+
+<span ng-repeat="n in range(numPages)">
+  <button class="w3-btn w3-blue w3-ripple" ng-click="updatePage(n)"> {{n + 1}} </button>
+</span>
+
+<button class="w3-btn w3-blue w3-ripple" ng-click="updatePage(numPages-1)"> Last Page </button>
+<br>
+<br>
+<a href = '/usershome/users/createuser'><button class="w3-btn w3-green w3-ripple"> &#9998; Create New User</button></a>
+
+</div>
+</div>
+
+<script type="text/javascript">
+var app = angular.module("myApp", []);
+
+app.factory('userFactory', ['$http', function($http) {
+	return {
+		getUsers: function() {
+			return $http.get("/usershome/users");
+		}
+	}
+}]);
+
+
+app.controller("userCtrl", function($scope,userFactory,$http) {
+
+	  $scope.pageSize = 6;
+    $scope.startIndex = 0;
+    $scope.currentPage = 0;
+    $scope.endIndex = $scope.pageSize;
+
+   	userFactory.getUsers().success(function(data) {
+   		$scope.users = data;
+   		initPage();
+	});
+
+	function initPage() {
+		$scope.numPages = Math.ceil( $scope.users.length / $scope.pageSize);
+		$scope.updatePage($scope.currentPage);
+	}
+
+    $scope.updatePagesLength = function(action) {
+      console.log("control : entered updatePagesLength");
+      $scope.numPages = Math.ceil( $scope.users.length / $scope.pageSize);
+      if (action == 'delete') {
+      	if ($scope.currentPage >= $scope.numPages) {
+      		$scope.updatePage($scope.currentPage - 1);
+      	}
+      	//  else {
+      	// 	$scope.updatePage($scope.numPages - 1);
+      	// }
+      } else {
+      	$scope.updatePage($scope.numPages - 1);
+      }
+      
+    };
+
+    $scope.range = function(num) {
+        step = 1;
+        var input = [];
+        for (var i = 0; i < num; i += step) {
+            input.push(i);
+        }
+        return input;
+    };
+
+    $scope.updatePage = function(page) {
+      $scope.currentPage = page;
+      $scope.startIndex = page * $scope.pageSize;
+      console.log("control : entered updatePage=" + page);
+      $scope.endIndex = $scope.startIndex + $scope.pageSize;
+    };
+
+    console.log("index outside the factory is " + $scope.startIndex, $scope.endIndex);
+
+	$scope.editUser = function(id) {
+		var url = '/usershome/users/' + id;
+		alert("user id to be edited is" + id + typeof(id));
+		window.location.href = url;
+	};
+
+	$scope.deleteUser = function(id) {
+    console.log('entered deleteuser function with id: ', id);
+    console.log(typeof(id), id);
+		var url = '/usershome/users/'+ id;
+    console.log('calling:  http.delete(' +url+ ')');
+
+		var request = $http.delete(url)
+	    .then(function(response) {
+        console.log(response.data);	        
+
+        for(var i=0; i< $scope.users.length ; i++)
+        {
+        	if(id == $scope.users[i]._id)
+  		    {
+  					$scope.users.splice(i, 1);
+  					console.log("done deleting" + id);
+  					$scope.updatePagesLength('delete');
+  			    break;
+  			  }
+        }
+	    });
+	}    
+});
+
+
+</script>
+
+</body>
+</html>
+
+

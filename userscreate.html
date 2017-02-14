@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<head>
+  <title>Create and edit user page</title>
+</head>
+<body ng-app='myApp'>
+<div ng-controller = 'createuserCtrl'>
+<form>
+  <h3 >Create New User:</h3>
+    <label>First Name:</label>
+    <input class="w3-input w3-border" type="text" ng-model="fName" placeholder="First Name">
+  <br>
+    <label>Last Name:</label>
+    <input class="w3-input w3-border" type="text" ng-model="lName" placeholder="Last Name">
+  <br>
+    <label>Password:</label>
+    <input class="w3-input w3-border" type="password" ng-model="passw1" placeholder="Password">
+  <br>
+    <label>Repeat:</label>
+    <input class="w3-input w3-border" type="password" ng-model="passw2" placeholder="Repeat Password">
+  <br>
+  <label>Title:</label>
+    <input class="w3-input w3-border" type="text" ng-model="title" placeholder="Title">
+  <br>
+  <label>Age:</label>
+    <input class="w3-input w3-border" type="text" ng-model="age" placeholder="Age">
+  <br>
+  <label>Sex:</label>
+    <div class="w3-input w3-border" type="radio" >
+    <input type="radio" ng-model="sex" value="male" checked> Male<br>
+    <input type="radio" ng-model="sex" value="female"> Female<br>
+    </div>
+  <br>
+  <button class="w3-btn w3-green w3-ripple" ng-disabled="error || incomplete" ng-click="create()">&#10004; Add User</button>
+</form>
+</div>
+
+<script type="text/javascript">
+var app = angular.module("myApp", []);
+app.controller('createuserCtrl', function($scope, $http) {
+  $scope.error = false;
+  $scope.incomplete = true;
+  $scope.fName = '';
+  $scope.lName = ''; 
+  $scope.passw1 = '';
+  $scope.passw2 = '';
+  $scope.title='';
+  $scope.age='';
+  $scope.test = function() {
+    
+    if ($scope.passw1 !== $scope.passw2 || isNaN($scope.age)) {
+      $scope.error = true;
+    } else {
+      $scope.error = false;
+    }
+
+    if (!$scope.fName || !$scope.lName || !$scope.passw1 || !$scope.passw2 || !$scope.title || !$scope.age || !$scope.sex ) {
+       $scope.incomplete = true;
+    } else {
+      $scope.incomplete = false;
+    }
+
+    console.log("error=" + $scope.error);
+    console.log("incomplete=" + $scope.incomplete);
+  };
+
+  $scope.$watch('passw1', function(val) { $scope.test() });
+  $scope.$watch('passw2', function(val) { $scope.test() });
+  $scope.$watch('fName', function(val) { $scope.test() });
+  $scope.$watch('lName', function(val) { $scope.test() });
+  $scope.$watch('title', function(val) { $scope.test() });
+  $scope.$watch('age', function(val) { $scope.test() });
+  $scope.$watch('sex', function(val) { $scope.test() });
+
+  $scope.create = function()
+  {
+    var request = $http.post("/usershome/users", {
+      'FirstName': $scope.fName,
+      'LastName': $scope.lName,
+      'age': $scope.age,
+      'sex': $scope.sex,
+      'Title': $scope.title
+    }).then(function(response) {
+       // alert(response.data);
+       if(response)
+        window.location.href="/usershome";
+    });
+  };
+
+});
+
+</script>
+</body>
+</html>
